@@ -1,0 +1,67 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Editar Perfil - Skate Park</title>
+    <link rel="stylesheet" href="../src/css/edit.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <div class="container-fluid">
+      <div id="titulo">
+        <h1>Editar Perfil</h1>
+      </div>
+      <form action="/edit" method="POST" class="form-signin">
+        <div class="form-group">
+          <label for="nombre">Nombre:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="nombre"
+            name="nombre"
+            value="{{skaters.nombre}}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="password">Contraseña:</label>
+          <input
+            type="password"
+            class="form-control"
+            id="password"
+            name="password"
+            value="{{skaters.password}}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="anos_experiencia">Años de Experiencia:</label>
+          <input
+            type="number"
+            class="form-control"
+            id="anos_experiencia"
+            name="anos_experiencia"
+            value="{{skaters.anos_experiencia}}"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="especialidad">Especialidad:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="especialidad"
+            name="especialidad"
+            value="{{skaters.especialidad}}"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+      </form>
+    </div>
+  </body>
+</html>

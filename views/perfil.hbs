@@ -1,0 +1,23 @@
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Perfil de Usuario</title>
+    <link rel="stylesheet" href="/static/css/perfil.css" />
+  </head>
+  <body>
+    <section class="container-fluid">
+      <header class="text-center">
+        <h1>Bienvenido, {{skaters.nombre}}!</h1>
+      </header>
+      <img class="profile-picture" src="/uploads/{{skaters.foto}}" alt="foto" />
+      <p>Email: {{skaters.email}}</p>
+      <p>Especialidad: {{skaters.especialidad}}</p>
+      <p>Años de Experiencia: {{skaters.anos_experiencia}}</p>
+    </section>
+    <form action="/edit" method="GET">
+      <button type="submit">Modificar Perfil</button>
+    </form>
+    <a href="/logout">Cerrar Sesión</a>
+  </body>
+</html>
