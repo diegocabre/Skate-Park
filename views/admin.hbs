@@ -1,56 +1,47 @@
-<!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Administrador - Skate Park</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/css/style.css" />
+    <title>Admin - Skatepark</title>
+    <link rel="stylesheet" href="/src/css/admin.css" />
   </head>
   <body>
-    <div class="container-fluid">
-      <div id="titulo">
-        <h1>Administrador</h1>
-      </div>
-      <div id="participantes">
-        <h2>Participantes Registrados</h2>
-        <table class="table table-dark table-striped">
-          <thead>
-            <tr>
-              <th scope="col">#</th>
-              <th scope="col">Foto</th>
-              <th scope="col">Nombre</th>
-              <th scope="col">Años de experiencia</th>
-              <th scope="col">Especialidad</th>
-              <th scope="col">Estado</th>
-              <th scope="col">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {{#each participants}}
-              <tr>
-                <th scope="row">{{@index}}</th>
-                <td><img src="/imgs/{{this.foto}}" alt="Foto" /></td>
-                <td>{{this.nombre}}</td>
-                <td>{{this.anos_experiencia}}</td>
-                <td>{{this.especialidad}}</td>
-                <td>{{#if this.estado}}Aprobado{{else}}Pendiente{{/if}}</td>
-                <td>
-                  {{#if this.estado}}
-                    Aprobado
-                  {{else}}
-                    <a href="/approve/{{this.id}}" class="btn btn-success">Aprobar</a>
-                  {{/if}}
-                  <a href="/delete/{{this.id}}" class="btn btn-danger">Eliminar</a>
-                </td>
-              </tr>
-            {{/each}}
-          </tbody>
-        </table>
-      </div>
-      <button class="btn btn-primary">
-        <a href="/" style="color: white; text-decoration: none;">Volver</a>
-      </button>
-    </div>
+    <h1>Administración de Participantes</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Foto</th>
+          <th>Nombre</th>
+          <th>Años de Experiencia</th>
+          <th>Especialidad</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each participants}}
+          <tr>
+            <th scope="row">{{@index}}</th>
+            <td><img src="/uploads/{{this.foto}}" alt="Foto" /></td>
+            <td>{{this.nombre}}</td>
+            <td>{{this.anos_experiencia}}</td>
+            <td>{{this.especialidad}}</td>
+            <td>{{this.estado}}</td>
+            <td>
+              {{#if (eq this.estado "aprobado")}}
+                Aprobado
+              {{else}}
+                <a
+                  href="/approve/{{this.id}}"
+                  class="btn btn-success"
+                >Aprobar</a>
+              {{/if}}
+              <a href="/delete/{{this.id}}" class="btn btn-danger">Eliminar</a>
+            </td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+    <a href="/logout" class="btn btn-primary">Cerrar Sesión</a>
   </body>
 </html>

@@ -8,24 +8,25 @@ const cookieParser = require("cookie-parser");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const db = require("./db/db");
+const helpers = require("handlebars-helpers")();
 const app = express();
 
 // Configuración del puerto
 const port = process.env.PORT || 3000;
 const uploadsDir = path.join(__dirname, "public", "uploads");
 
-// Crea el directorio 'uploads' en la carpeta public si no existe
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-// Configuración de Handlebars sin layout por defecto
+// Configuración de Handlebars
 app.engine(
   "hbs",
   exphbs.engine({
     extname: "hbs",
-    defaultLayout: false, // No utilizar un layout por defecto
+    defaultLayout: false,
     layoutsDir: __dirname + "/views/",
+    helpers: helpers,
   })
 );
 app.set("view engine", "hbs");
@@ -36,9 +37,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(fileUpload());
 app.use(express.static("public"));
-
-// Ruta para servir archivos estáticos
 app.use("/static", express.static(__dirname + "/src"));
+app.use("/src/css", express.static(path.join(__dirname, "src", "css")));
 
 // Rutas y lógica de tu aplicación
 app.get("/", async (req, res) => {
@@ -61,7 +61,6 @@ app.get("/registrar", (req, res) => {
   res.render("register");
 });
 
-// Ruta para registrar un usuario
 app.post("/register", async (req, res) => {
   const {
     nombre,
@@ -72,7 +71,7 @@ app.post("/register", async (req, res) => {
     anos_experiencia,
   } = req.body;
 
-  const foto = req.files ? req.files.foto : null; // Accede al archivo subido
+  const foto = req.files ? req.files.foto : null;
 
   if (password !== repeatPassword) {
     return res.status(400).send("Las contraseñas no coinciden");
@@ -83,7 +82,6 @@ app.post("/register", async (req, res) => {
       return res.status(400).send("Debe subir una foto");
     }
 
-    // Guardar la imagen en algún lugar accesible
     const fileName = Date.now() + "-" + foto.name;
     foto.mv(path.join(uploadsDir, fileName));
 
@@ -92,11 +90,9 @@ app.post("/register", async (req, res) => {
       [nombre, email, password, especialidad, anos_experiencia, fileName]
     );
 
-    // Crear y firmar el token JWT
     const token = jwt.sign({ id: result.rows[0].id }, "secretKey");
     res.cookie("token", token);
 
-    // Renderizar la vista de éxito
     res.render("success");
   } catch (error) {
     console.error(error);
@@ -104,7 +100,6 @@ app.post("/register", async (req, res) => {
   }
 });
 
-// Ruta para iniciar sesión
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -116,14 +111,12 @@ app.post("/login", async (req, res) => {
       return res.status(401).send("Credenciales incorrectas");
     }
 
-    // Crear y firmar el token JWT
     const token = jwt.sign(
       { id: result.rows[0].id, email: result.rows[0].email },
       "secretKey"
     );
     res.cookie("token", token);
 
-    // Verificar si el usuario es administrador
     if (email === "admin@skatepark.com") {
       res.redirect("/admin");
     } else {
@@ -135,7 +128,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Ruta para cargar la vista de administrador
 app.get("/admin", async (req, res) => {
   const token = req.cookies.token;
   if (!token)
@@ -144,7 +136,6 @@ app.get("/admin", async (req, res) => {
   try {
     const decoded = jwt.verify(token, "secretKey");
 
-    // Verificar si el usuario es administrador
     if (decoded.email !== "admin@skatepark.com") {
       return res.status(403).send("Acceso denegado. No eres administrador.");
     }
@@ -159,7 +150,6 @@ app.get("/admin", async (req, res) => {
   }
 });
 
-// Ruta para aprobar un participante
 app.get("/approve/:id", async (req, res) => {
   const token = req.cookies.token;
   if (!token)
@@ -168,12 +158,11 @@ app.get("/approve/:id", async (req, res) => {
   try {
     const decoded = jwt.verify(token, "secretKey");
 
-    // Verificar si el usuario es administrador
     if (decoded.email !== "admin@skatepark.com") {
       return res.status(403).send("Acceso denegado. No eres administrador.");
     }
 
-    await db.query("UPDATE skaters SET estado = 'aprobado' WHERE id = $1", [
+    await db.query("UPDATE skaters SET estado = TRUE WHERE id = $1", [
       req.params.id,
     ]);
     res.redirect("/admin");
@@ -183,7 +172,6 @@ app.get("/approve/:id", async (req, res) => {
   }
 });
 
-// Ruta para redirigir a la eliminación de un usuario
 app.get("/delete/:id", (req, res) => {
   const token = req.cookies.token;
   if (!token) {
@@ -193,7 +181,6 @@ app.get("/delete/:id", (req, res) => {
   try {
     const decoded = jwt.verify(token, "secretKey");
 
-    // Verificar si el usuario es administrador
     if (decoded.email !== "admin@skatepark.com") {
       return res.status(403).send("Acceso denegado. No eres administrador.");
     }
@@ -205,7 +192,6 @@ app.get("/delete/:id", (req, res) => {
   }
 });
 
-// Ruta para eliminar un usuario
 app.post("/delete/:id", async (req, res) => {
   const userId = req.params.id;
   const token = req.cookies.token;
@@ -217,15 +203,12 @@ app.post("/delete/:id", async (req, res) => {
   try {
     const decoded = jwt.verify(token, "secretKey");
 
-    // Verificar si el usuario es administrador
     if (decoded.email !== "admin@skatepark.com") {
       return res.status(403).send("Acceso denegado. No eres administrador.");
     }
 
-    // Eliminar el usuario
     await db.query("DELETE FROM skaters WHERE id = $1", [userId]);
 
-    // Ajustar la secuencia del ID
     await db.query(`
       SELECT setval(pg_get_serial_sequence('skaters', 'id'), coalesce(max(id), 1), false) FROM skaters
     `);
@@ -237,84 +220,73 @@ app.post("/delete/:id", async (req, res) => {
   }
 });
 
-// Ruta para mostrar el perfil del usuario
 app.get("/perfil", async (req, res) => {
   try {
     const token = req.cookies.token;
 
-    // Verificar y decodificar el token JWT
     const decoded = jwt.verify(token, "secretKey");
 
-    // Obtener información del usuario desde la base de datos
     const result = await db.query(
       "SELECT nombre, email, especialidad, anos_experiencia, foto FROM skaters WHERE id = $1",
       [decoded.id]
     );
 
-    // Verificar si el usuario fue encontrado
     if (result.rows.length === 0) {
       return res.status(404).send("Usuario no encontrado");
     }
 
-    // Renderizar la plantilla perfil.hbs con los datos del usuario
     res.render("perfil", { skaters: result.rows[0] });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error al cargar perfil");
+    res.status(500).send("Error al mostrar el perfil del usuario");
   }
 });
 
-// Ruta para cerrar sesión
-app.get("/logout", (req, res) => {
-  res.clearCookie("token");
-  res.redirect("/");
-});
-
-// Ruta para modificar perfil
-app.get("/edit", async (req, res) => {
+app.get("/editar-perfil", async (req, res) => {
   try {
     const token = req.cookies.token;
-    if (!token) {
-      return res.status(401).send("Acceso denegado. No se proporcionó token.");
-    }
 
     const decoded = jwt.verify(token, "secretKey");
-    const result = await db.query("SELECT * FROM skaters WHERE id = $1", [
-      decoded.id,
-    ]);
 
-    res.render("edit", { skaters: result.rows[0] });
+    const result = await db.query(
+      "SELECT nombre, email, especialidad, anos_experiencia, foto FROM skaters WHERE id = $1",
+      [decoded.id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).send("Usuario no encontrado");
+    }
+
+    res.render("editarPerfil", { skaters: result.rows[0] });
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error al cargar el perfil para editar");
+    res.status(500).send("Error al cargar el formulario de edición del perfil");
   }
 });
 
-// Ruta para actualizar perfil
-
-app.post("/edit", async (req, res) => {
+app.post("/editar-perfil", async (req, res) => {
+  const { nombre, especialidad, anos_experiencia } = req.body;
   const token = req.cookies.token;
+
   if (!token) {
     return res.status(401).send("Acceso denegado. No se proporcionó token.");
   }
 
   try {
     const decoded = jwt.verify(token, "secretKey");
-    const { nombre, password, especialidad, anos_experiencia } = req.body;
 
     await db.query(
-      "UPDATE skaters SET nombre = $1, password = $2, especialidad = $3, anos_experiencia = $4 WHERE id = $5",
-      [nombre, password, especialidad, anos_experiencia, decoded.id]
+      "UPDATE skaters SET nombre = $1, especialidad = $2, anos_experiencia = $3 WHERE id = $4",
+      [nombre, especialidad, anos_experiencia, decoded.id]
     );
 
     res.redirect("/perfil");
   } catch (error) {
     console.error(error);
-    res.status(500).send("Error al modificar perfil");
+    res.status(500).send("Error al actualizar el perfil del usuario");
   }
 });
 
-// Inicio del servidor
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Servidor iniciado en http://localhost:${port}`);
 });
